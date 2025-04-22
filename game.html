@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Swedish Word</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Subtle gradient background for coastal feel */
+            background: linear-gradient(to bottom, #e0f2fe, #fef3c7); /* Light sky blue to pale yellow */
+            min-height: 100vh; /* Ensure gradient covers full height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* Add padding for smaller screens */
+        }
+        /* Style for the speaker icon button */
+        .speaker-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .speaker-button:hover {
+            transform: scale(1.1);
+        }
+        .speaker-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Animation for timer bar - Updated duration */
+        @keyframes timer-decrease {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .timer-bar-inner {
+            height: 100%;
+            background-color: #38bdf8; /* Sky blue */
+            border-radius: 0.25rem; /* rounded-sm */
+            /* Updated animation duration to 10s */
+            animation: timer-decrease 10s linear forwards;
+            animation-play-state: paused; /* Start paused */
+        }
+        .timer-bar-inner.running {
+            animation-play-state: running;
+        }
+        /* Button styles */
+        .choice-button, .play-again-button, .start-button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .choice-button:hover:not(:disabled), .play-again-button:hover, .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .choice-button:active:not(:disabled), .play-again-button:active, .start-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* Feedback styles */
+        .feedback-correct {
+            color: #16a34a; /* Green */
+        }
+        .feedback-incorrect {
+            color: #dc2626; /* Red */
+        }
+        /* Ensure sufficient touch target size */
+        .choice-button, .play-again-button, .start-button, .speaker-button {
+            padding: 0.75rem 1.5rem; /* p-3 sm:p-4 */
+            margin: 0.5rem; /* m-2 */
+        }
+        @media (min-width: 640px) {
+            .choice-button, .play-again-button, .start-button {
+                padding: 1rem 2rem;
+            }
+        }
+        /* Simple decoration styles */
+        .decoration {
+            font-size: 1.5rem; /* Adjust size as needed */
+            margin: 0 0.5rem;
+            opacity: 0.8;
+        }
+
+    </style>
+</head>
+<body class="text-sky-900">
+<!--link back to resume-->
+    <a href="scratch.html">Scratch</a> <br> <br>
+
+    <div id="game-container" class="w-full max-w-2xl mx-auto p-4 sm:p-6 md:p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg text-center">
+
+        <div id="start-screen">
+            <h1 class="text-3xl sm:text-4xl font-bold mb-4 text-sky-800">Guess the Swedish Word</h1>
+            <p class="text-lg sm:text-xl mb-6">Learn common Swedish words!</p>
+            <div class="flex justify-center items-center mb-6">
+                 <span class="decoration">🌸</span>
+                 <img src="https://placehold.co/150x100/e0f2fe/38bdf8?text=🇸🇪" alt="Swedish Flag Placeholder" class="mx-auto rounded-lg shadow" onerror="this.src='https://placehold.co/150x100/e0f2fe/38bdf8?text=Flag'; this.alt='Placeholder Image'">
+                 <span class="decoration">🐚</span>
+            </div>
+             <button id="start-button" class="start-button w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-2 px-6 rounded-lg shadow">
+                Start Game
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span id="round-counter" class="text-sm sm:text-base font-semibold">Round: 1 / 5</span>
+                <span id="timer-display" class="text-sm sm:text-base font-semibold">Time: 10s</span> </div>
+            <div class="w-full bg-gray-200 rounded-sm h-2 mb-6 overflow-hidden">
+                <div id="timer-bar" class="timer-bar-inner"></div>
+            </div>
+
+            <div class="mb-6 flex items-center justify-center space-x-3">
+                 <h2 id="swedish-word" class="text-4xl sm:text-5xl font-bold text-sky-700"></h2>
+                 <button id="pronounce-button" class="speaker-button" title="Listen to pronunciation">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 sm:w-10 sm:h-10 text-sky-600 hover:text-sky-800">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                     </svg>
+                 </button>
+            </div>
+
+            <div id="choices" class="grid grid-cols-1 gap-3 sm:gap-4 mb-4">
+                </div>
+            <p id="feedback" class="h-6 text-lg font-semibold"></p> </div>
+
+        <div id="end-screen" class="hidden">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-sky-800">Game Over!</h2>
+            <p class="text-xl sm:text-2xl mb-6">Your final score is: <span id="final-score" class="font-bold"></span> / 5</p>
+             <div class="flex justify-center items-center mb-6">
+                 <span class="decoration">☀️</span>
+                 <img src="https://placehold.co/150x100/fef3c7/ca8a04?text=🎉" alt="Celebration Placeholder" class="mx-auto rounded-lg shadow" onerror="this.src='https://placehold.co/150x100/fef3c7/ca8a04?text=Done!'; this.alt='Placeholder Image'">
+                 <span class="decoration">🌊</span>
+             </div>
+            <button id="play-again-button" class="play-again-button w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-2 px-6 rounded-lg shadow">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startButton = document.getElementById('start-button'); // Added Start Button
+        const roundCounterEl = document.getElementById('round-counter');
+        const timerDisplayEl = document.getElementById('timer-display');
+        const timerBarEl = document.getElementById('timer-bar');
+        const swedishWordEl = document.getElementById('swedish-word');
+        const pronounceButton = document.getElementById('pronounce-button');
+        const choicesEl = document.getElementById('choices');
+        const feedbackEl = document.getElementById('feedback');
+        const finalScoreEl = document.getElementById('final-score');
+        const playAgainButton = document.getElementById('play-again-button');
+
+        // --- Game Data ---
+        const words = [
+            { swedish: "lagom", correct: "just right", incorrect: ["too much", "too little"] },
+            { swedish: "fika", correct: "coffee break", incorrect: ["dinner", "party"] },
+            { swedish: "smörgåsbord", correct: "buffet", incorrect: ["sandwich", "dessert table"] },
+            { swedish: "älskar", correct: "love", incorrect: ["like", "hate"] },
+            { swedish: "tack", correct: "thank you", incorrect: ["please", "hello"] },
+            { swedish: "hej", correct: "hello", incorrect: ["goodbye", "yes"] },
+            { swedish: "skål", correct: "cheers", incorrect: ["drink", "bowl"] },
+            { swedish: "mysa", correct: "to cozy up", incorrect: ["to sleep", "to run"] },
+            { swedish: "planka", correct: "steak on wood", incorrect: ["plank exercise", "board"] },
+            { swedish: "köttbullar", correct: "meatballs", incorrect: ["sausages", "fish balls"] },
+            { swedish: "sol", correct: "sun", incorrect: ["moon", "star"] },
+            { swedish: "vatten", correct: "water", incorrect: ["milk", "juice"] },
+            { swedish: "strand", correct: "beach", incorrect: ["forest", "mountain"] },
+            { swedish: "sommar", correct: "summer", incorrect: ["winter", "spring"] },
+            { swedish: "båt", correct: "boat", incorrect: ["car", "train"] }
+        ];
+        const TOTAL_ROUNDS = 5;
+        const TIME_PER_ROUND = 10; // *** Updated timer duration to 10 seconds ***
+
+        // --- Game State ---
+        let currentRound = 0;
+        let score = 0;
+        let timerId = null;
+        let timeLeft = TIME_PER_ROUND;
+        let gameActive = false;
+        let currentWordData = null;
+        let wordIndices = []; // To track used words within a game
+        let synth = window.speechSynthesis;
+        let swedishVoice = null;
+
+        // --- Speech Synthesis ---
+        function loadVoices() {
+            // Added delay to potentially help voices load on some browsers
+            setTimeout(() => {
+                 const voices = synth.getVoices();
+                 swedishVoice = voices.find(voice => voice.lang === 'sv-SE');
+
+                 if (!swedishVoice && voices.length > 0) { // Check if voices loaded but Swedish wasn't found
+                     console.warn("Swedish (sv-SE) voice not found. Pronunciation may use default voice or fail.");
+                     // Try finding a generic Swedish voice if specific locale fails
+                     swedishVoice = voices.find(voice => voice.lang.startsWith('sv'));
+                     if(swedishVoice) console.log("Using generic Swedish voice:", swedishVoice.name);
+                 } else if (voices.length === 0) {
+                     console.warn("Voice list empty. Speech synthesis might not be ready or supported.");
+                 }
+
+                 // Enable/disable based on final check
+                 pronounceButton.disabled = !swedishVoice;
+
+            }, 100); // 100ms delay
+        }
+
+        // Load voices initially and on voiceschanged event
+        loadVoices();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+
+        function speakSwedishWord(word) {
+            if (!synth || !word) return;
+            // Cancel any previous speech first
+            if (synth.speaking) {
+                 console.log('Cancelling previous speech');
+                 synth.cancel();
+            }
+
+            const utterThis = new SpeechSynthesisUtterance(word);
+            utterThis.onend = function (event) {
+                // console.log('SpeechSynthesisUtterance.onend');
+            }
+            utterThis.onerror = function (event) {
+                console.error('SpeechSynthesisUtterance.onerror', event);
+                feedbackEl.textContent = "Pronunciation error.";
+                feedbackEl.className = 'h-6 text-lg font-semibold feedback-incorrect';
+                 // Re-enable button potentially? Or leave disabled if error is persistent
+            }
+
+            if (swedishVoice) {
+                utterThis.voice = swedishVoice;
+            } else {
+                 utterThis.lang = 'sv-SE'; // Attempt to set language anyway
+                 console.warn("Using default voice or browser fallback for Swedish.");
+            }
+
+            utterThis.pitch = 1;
+            utterThis.rate = 0.9; // Slightly slower for clarity
+            synth.speak(utterThis);
+        }
+
+        // --- Utility Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+        }
+
+        function getRandomWordIndex() {
+            if (wordIndices.length === words.length) {
+                wordIndices = []; // Reset if all words used
+            }
+            let index;
+            do {
+                index = Math.floor(Math.random() * words.length);
+            } while (wordIndices.includes(index));
+            wordIndices.push(index);
+            return index;
+        }
+
+        // --- Game Flow Functions ---
+        function startGame() {
+            // No need for gameActive check here as button click handles it
+            gameActive = true; // Set active flag
+            currentRound = 0;
+            score = 0;
+            wordIndices = [];
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            feedbackEl.textContent = '';
+            nextRound();
+        }
+
+        function nextRound() {
+            clearTimeout(timerId);
+            resetTimerAnimation();
+            currentRound++;
+
+            if (currentRound > TOTAL_ROUNDS) {
+                endGame();
+                return;
+            }
+
+            roundCounterEl.textContent = `Round: ${currentRound} / ${TOTAL_ROUNDS}`;
+            timeLeft = TIME_PER_ROUND;
+            timerDisplayEl.textContent = `Time: ${timeLeft}s`;
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'h-6 text-lg font-semibold';
+
+            const wordIndex = getRandomWordIndex();
+            currentWordData = words[wordIndex];
+            swedishWordEl.textContent = currentWordData.swedish;
+
+            const choices = [...currentWordData.incorrect, currentWordData.correct];
+            shuffleArray(choices);
+
+            choicesEl.innerHTML = '';
+            choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice;
+                button.classList.add('choice-button', 'w-full', 'bg-sky-500', 'hover:bg-sky-600', 'text-white', 'font-medium', 'py-2', 'px-4', 'rounded-lg', 'shadow');
+                button.onclick = () => selectAnswer(choice, button);
+                choicesEl.appendChild(button);
+            });
+
+            // Re-check voice availability before enabling button
+            pronounceButton.disabled = !synth || !swedishVoice;
+
+            startTimerAnimation();
+            timerId = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerDisplayEl.textContent = `Time: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                feedbackEl.textContent = "Time's up!";
+                feedbackEl.className = 'h-6 text-lg font-semibold feedback-incorrect';
+                disableChoices();
+                highlightCorrectAnswer();
+                setTimeout(nextRound, 2000);
+            }
+        }
+
+        function selectAnswer(selectedChoice, button) {
+            clearInterval(timerId);
+            pauseTimerAnimation();
+            disableChoices();
+
+            if (selectedChoice === currentWordData.correct) {
+                score++;
+                feedbackEl.textContent = 'Correct!';
+                feedbackEl.className = 'h-6 text-lg font-semibold feedback-correct';
+                button.classList.remove('bg-sky-500', 'hover:bg-sky-600');
+                button.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                feedbackEl.textContent = `Incorrect! It means "${currentWordData.correct}".`;
+                feedbackEl.className = 'h-6 text-lg font-semibold feedback-incorrect';
+                button.classList.remove('bg-sky-500', 'hover:bg-sky-600');
+                button.classList.add('bg-red-500', 'hover:bg-red-600');
+                highlightCorrectAnswer();
+            }
+
+            setTimeout(nextRound, 2000);
+        }
+
+        function disableChoices() {
+            const buttons = choicesEl.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        function highlightCorrectAnswer() {
+             const buttons = choicesEl.querySelectorAll('button');
+             buttons.forEach(btn => {
+                 if (btn.textContent === currentWordData.correct) {
+                     if (!btn.classList.contains('bg-green-500')) {
+                         btn.classList.remove('bg-sky-500', 'hover:bg-sky-600', 'bg-red-500', 'hover:bg-red-600');
+                         btn.classList.add('bg-green-500', 'opacity-75');
+                     }
+                 }
+             });
+        }
+
+
+        function startTimerAnimation() {
+            timerBarEl.style.animation = 'none';
+            void timerBarEl.offsetWidth; // Trigger reflow
+            // *** Ensure animation duration matches TIME_PER_ROUND ***
+            timerBarEl.style.animation = `timer-decrease ${TIME_PER_ROUND}s linear forwards`;
+            timerBarEl.classList.add('running');
+        }
+
+        function pauseTimerAnimation() {
+             timerBarEl.style.animationPlayState = 'paused';
+        }
+
+        function resetTimerAnimation() {
+             timerBarEl.classList.remove('running');
+             timerBarEl.style.animation = 'none';
+             timerBarEl.style.width = '100%';
+             timerBarEl.style.animationPlayState = 'paused';
+        }
+
+
+        function endGame() {
+            gameActive = false; // Mark game as inactive
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScoreEl.textContent = score;
+            resetTimerAnimation();
+        }
+
+        // --- Event Listeners ---
+        // *** Removed keydown listener for starting game ***
+
+        // *** Added click listener for the start button ***
+        startButton.addEventListener('click', startGame);
+
+        pronounceButton.addEventListener('click', () => {
+            if (currentWordData) {
+                speakSwedishWord(currentWordData.swedish);
+            }
+        });
+
+        playAgainButton.addEventListener('click', () => {
+             // Reset state and show start screen again
+             gameActive = false; // Ensure game is marked inactive
+             endScreen.classList.add('hidden');
+             startScreen.classList.remove('hidden');
+             // No need to re-attach listeners, just show the correct screen
+        });
+
+         // Initial setup check for speech synthesis support
+         if (!('speechSynthesis' in window)) {
+             console.error("Speech Synthesis not supported in this browser.");
+             pronounceButton.disabled = true;
+             pronounceButton.title = "Speech synthesis not supported";
+         } else {
+             // Ensure voices are loaded before potentially enabling the button
+             loadVoices();
+         }
+
+    </script>
+
+</body>
+</html>

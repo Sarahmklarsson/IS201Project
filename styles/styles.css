@@ -1,0 +1,96 @@
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    /*font-size: 15px;*/
+    /*color: gray;*/
+    background-color: rgba(222, 231, 240, 0.948);
+    }
+
+li {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: normal;
+    }
+
+a {
+    color: rgb(48, 48, 94);
+    text-decoration: none;
+    } 
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+/* custom styles */
+.listHeader {
+    font-weight: bold;
+    font-style: normal;
+}
+
+.italicListElement {
+    font-style: italic;
+}
+
+.headertext {
+    text-align: center;
+}
+
+
+/* custom style for divs */
+.common {
+    /*background-color: beige;*/
+    /*border: 2px solid white;*/
+    position: absolute;
+}
+
+.header {
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    height: 100px;
+    /*border-bottom: solid 1px gray;*/
+    background-color: rgb(255, 255, 255);
+}
+
+.leftmenu {
+    top: 114px;
+    left: 5px;
+    width: 100px;
+    bottom: 39px;
+}
+
+/* old mainbody
+.mainbody{
+    top: 114px;
+    left: 114px;
+    right: 5px;
+    bottom: 39px;
+}
+*/
+
+/*chat mainbody*/
+.mainbody {
+    min-height: calc(100vh - 114px - 40px); /* full height minus header and footer */
+    margin-top: 107px;
+    left: 114px;
+    right: 50px;
+    padding-bottom: 40px; /* so it doesn't hide behind the footer */
+    border-left: solid 1px gray;
+    padding-left: 10px;
+  }
+
+.footer {
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 25px;
+    font-size: 8px;
+    color: gray;
+    text-align: center;
+    padding-top: 15px;
+    position: fixed;
+}
+
+
+
+
